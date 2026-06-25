@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcard SAEG — Italien</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F4EE;--surface:#FFFFFF;--surface2:#F0EDE6;--surface3:#E8E4DC;
+  --text:#1A1714;--muted:#7A7570;--faint:#B0AAA3;
+  --accent:#2B4C3F;--accent-l:#E2EDE9;--accent-ll:#F0F6F3;
+  --red:#8B2E2E;--red-l:#F5E8E8;
+  --blue:#1E3A5F;--blue-l:#E5EBF3;
+  --orange:#7A4010;--orange-l:#FDF0E6;
+  --green:#1A6B3C;--green-l:#E6F5ED;
+  --border:#DDD9D2;--shadow:0 2px 16px rgba(0,0,0,0.07);
+  --radius:12px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 5rem}
+
+/* NAV */
+nav{width:100%;background:var(--surface);border-bottom:1px solid var(--border);display:flex;justify-content:center;position:sticky;top:0;z-index:100}
+.nav-inner{display:flex;gap:0;max-width:720px;width:100%}
+.nav-btn{flex:1;padding:14px 8px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;font-weight:400}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
+.nav-btn:hover:not(.active){color:var(--text)}
+
+.page{display:none;width:100%;max-width:620px;padding:1.5rem 1rem}
+.page.active{display:block}
+
+/* HEADER */
+.page-header{text-align:center;margin-bottom:1.75rem}
+.page-header h1{font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;margin-bottom:0.25rem}
+.page-header p{font-size:0.82rem;color:var(--muted)}
+
+/* PILLS */
+.pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.pill{padding:5px 13px;border-radius:99px;border:1px solid var(--border);background:var(--surface);font-size:0.78rem;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--muted);transition:all 0.15s}
+.pill:hover{border-color:var(--accent);color:var(--accent)}
+.pill.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+
+/* SELECT */
+select{width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-family:'DM Sans',sans-serif;font-size:0.83rem;color:var(--text);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237A7570' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;margin-bottom:1rem}
+
+/* SCORE ROW */
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:1.25rem}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.65rem 0.5rem;text-align:center}
+.sc .n{font-family:'DM Serif Display',serif;font-size:1.4rem;line-height:1}
+.sc .l{font-size:0.68rem;color:var(--faint);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+.sc.due .n{color:var(--orange)}
+.sc.ok .n{color:var(--green)}
+.sc.ko .n{color:var(--red)}
+
+/* PROGRESS */
+.prog-wrap{margin-bottom:1.25rem}
+.prog-meta{display:flex;justify-content:space-between;font-size:0.75rem;color:var(--muted);margin-bottom:5px}
+.prog-bar{height:3px;background:var(--border);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .4s ease}
+
+/* CARD */
+.card-scene{perspective:1000px;margin-bottom:1rem}
+.card{width:100%;min-height:210px;position:relative;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,0,.2,1);cursor:pointer}
+.card.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;width:100%;min-height:210px;backface-visibility:hidden;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.75rem;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:var(--shadow)}
+.card-back{transform:rotateY(180deg)}
+.card-badge{display:inline-block;padding:3px 11px;border-radius:99px;font-size:0.7rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-bottom:.9rem}
+.be{background:var(--red-l);color:var(--red)}
+.bv{background:var(--blue-l);color:var(--blue)}
+.card-interval{font-size:0.7rem;color:var(--faint);margin-bottom:.5rem}
+.card-lang{font-size:0.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:.5rem;font-weight:500}
+.card-word{font-family:'DM Serif Display',serif;font-size:1.45rem;font-weight:400;color:var(--text);line-height:1.3;margin-bottom:.6rem}
+.card-note{font-size:0.8rem;color:var(--muted);font-style:italic;line-height:1.6;max-width:360px}
+.flip-hint{text-align:center;font-size:0.75rem;color:var(--faint);margin-bottom:.85rem}
+
+/* BUTTONS */
+.ans-row{display:none;gap:8px;margin-bottom:.85rem}
+.ans-row.vis{display:flex}
+.btn-a{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;font-weight:500;transition:all .15s}
+.btn-ko{background:var(--red-l);color:var(--red);border-color:#E8C5C5}
+.btn-ko:hover{background:#edd0d0}
+.btn-ok{background:var(--accent-l);color:var(--accent);border-color:#C5D9D2}
+.btn-ok:hover{background:#d2e6df}
+.nav-row{display:flex;gap:8px}
+.btn-n{flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--surface);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;color:var(--muted);transition:all .15s}
+.btn-n:hover{background:var(--surface2);color:var(--text)}
+.btn-n.pri{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:500}
+.btn-n.pri:hover{background:#234038}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty .big{font-family:'DM Serif Display',serif;font-size:2.5rem;margin-bottom:.5rem}
+.empty p{font-size:0.85rem;line-height:1.7}
+
+/* ── LIST PAGE ── */
+.list-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;align-items:center}
+.search-input{flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:var(--surface);color:var(--text)}
+.search-input:focus{outline:none;border-color:var(--accent)}
+.list-stats{font-size:0.78rem;color:var(--muted);margin-bottom:1rem}
+table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);font-size:0.8rem}
+thead{background:var(--surface2)}
+th{padding:9px 12px;text-align:left;font-weight:500;font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--accent)}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.45}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.badge-s{display:inline-block;padding:2px 8px;border-radius:99px;font-size:0.68rem;font-weight:500;white-space:nowrap}
+.s-new{background:#F3F0EB;color:var(--muted)}
+.s-learning{background:var(--orange-l);color:var(--orange)}
+.s-review{background:var(--accent-ll);color:var(--accent)}
+.s-mastered{background:var(--green-l);color:var(--green)}
+.col-it{max-width:160px;font-weight:500}
+.col-fr{max-width:140px;color:var(--muted)}
+.col-note{max-width:140px;color:var(--faint);font-style:italic;font-size:0.74rem}
+
+/* ── STATS PAGE ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem}
+.stat-card .big-n{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--text)}
+.stat-card .stat-l{font-size:0.75rem;color:var(--muted);margin-top:2px}
+.bar-chart{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+.bar-chart h3{font-size:0.8rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:1rem}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-lbl{font-size:0.75rem;width:70px;color:var(--muted);flex-shrink:0}
+.bar-track{flex:1;height:8px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;transition:width .6s ease}
+.bar-val{font-size:0.75rem;color:var(--muted);width:30px;text-align:right}
+.reset-btn{width:100%;padding:10px;border-radius:10px;border:1px solid #E8C5C5;background:var(--red-l);color:var(--red);font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;font-weight:500;margin-top:1rem}
+.reset-btn:hover{background:#edd0d0}
+
+/* ── TUTO ── */
+.tuto-toggle{width:100%;background:none;border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-family:'DM Sans',sans-serif;font-size:0.82rem;color:var(--muted);cursor:pointer;text-align:left;display:flex;justify-content:space-between;margin-top:1.5rem}
+.tuto-toggle:hover{background:var(--surface)}
+.tuto-box{display:none;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:1.25rem}
+.tuto-box.open{display:block}
+.tuto-step{display:flex;gap:10px;margin-bottom:1rem}
+.tuto-num{background:var(--accent);color:#fff;border-radius:99px;width:22px;height:22px;min-width:22px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:500;margin-top:1px}
+.tuto-step p{font-size:0.8rem;color:var(--muted);line-height:1.65}
+.tuto-step p strong{color:var(--text)}
+code{font-family:monospace;font-size:0.77rem;background:var(--surface2);padding:1px 6px;border-radius:4px;color:var(--accent)}
+.code-block{background:var(--surface2);border-radius:8px;padding:.9rem;margin:.4rem 0;font-family:monospace;font-size:0.75rem;color:var(--accent);line-height:1.8;word-break:break-all;white-space:pre-wrap}
+.tuto-tip{background:var(--accent-ll);border-radius:8px;padding:.7rem 1rem;font-size:0.78rem;color:var(--accent);margin-top:.75rem;line-height:1.6}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="showPage('study')">📚 Révision</button>
+    <button class="nav-btn" onclick="showPage('list')">📋 Liste</button>
+    <button class="nav-btn" onclick="showPage('stats')">📊 Stats</button>
+  </div>
+</nav>
+
+<!-- ═══════════════ PAGE ÉTUDE ═══════════════ -->
+<div class="page active" id="page-study">
+  <div class="page-header">
+    <h1>Flashcard SAEG</h1>
+    <p>Répétition espacée · Italien</p>
+  </div>
+
+  <div class="pill-row">
+    <button class="pill active" onclick="setTab('due',this)">À réviser aujourd'hui</button>
+    <button class="pill" onclick="setTab('all',this)">Toutes</button>
+    <button class="pill" onclick="setTab('errore',this)">Erreurs</button>
+    <button class="pill" onclick="setTab('vocab',this)">Vocabulaire</button>
+  </div>
+
+  <select id="dir-select" onchange="setDir(this.value)">
+    <option value="it-fr">Italien → Français</option>
+    <option value="fr-it">Français → Italien</option>
+    <option value="random">Direction aléatoire</option>
+  </select>
+
+  <div class="score-row">
+    <div class="sc due"><div class="n" id="sc-due">0</div><div class="l">À revoir</div></div>
+    <div class="sc"><div class="n" id="sc-new">0</div><div class="l">Nouvelles</div></div>
+    <div class="sc ok"><div class="n" id="sc-ok">0</div><div class="l">Correctes</div></div>
+    <div class="sc ko"><div class="n" id="sc-ko">0</div><div class="l">Ratées</div></div>
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-meta"><span id="prog-txt">0 / 0</span><span id="prog-pct">0%</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="card-scene">
+    <div class="card" id="main-card" onclick="handleClick()">
+      <div class="card-face card-front">
+        <span class="card-badge" id="f-badge"></span>
+        <div class="card-interval" id="f-interval"></div>
+        <div class="card-lang" id="f-lang"></div>
+        <div class="card-word" id="f-word"></div>
+        <div class="card-note" id="f-note"></div>
+      </div>
+      <div class="card-face card-back">
+        <div class="card-lang" id="b-lang"></div>
+        <div class="card-word" id="b-word"></div>
+        <div class="card-note" id="b-note"></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="flip-hint" id="flip-hint">Cliquer pour voir la réponse · recliquer pour revenir</p>
+
+  <div class="ans-row" id="ans-row">
+    <button class="btn-a btn-ko" onclick="answer(false)">✗ Raté</button>
+    <button class="btn-a btn-ok" onclick="answer(true)">✓ Correct</button>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-n" onclick="shuffleDeck()">⇄ Mélanger</button>
+    <button class="btn-n" onclick="resetSession()">↺ Recommencer</button>
+    <button class="btn-n pri" onclick="nextCard()">Suivante →</button>
+  </div>
+
+  <button class="tuto-toggle" onclick="toggleTuto()">📖 Comment ajouter du vocabulaire ? <span id="t-arrow">▼</span></button>
+  <div class="tuto-box" id="tuto-box">
+    <div class="tuto-step"><div class="tuto-num">1</div><p><strong>Ouvre ce fichier avec un éditeur de texte.</strong><br>Mac : clic droit → Ouvrir avec → TextEdit (Format → Texte brut). Windows : clic droit → Bloc-notes. Recommandé : <strong>VS Code</strong> (gratuit).</p></div>
+    <div class="tuto-step"><div class="tuto-num">2</div><p><strong>Trouve le repère</strong> avec Ctrl+F (Cmd+F sur Mac) :<br><code>// ─── FIN DES CARTES — ajouter ici ───</code></p></div>
+    <div class="tuto-step"><div class="tuto-num">3</div><p><strong>Colle tes nouvelles cartes juste au-dessus de cette ligne.</strong> Format :</p>
+    <div class="code-block">{ type: 'vocab', it: 'la transizione energetica', fr: 'la transition énergétique', note_it: 'Tema Green Deal', note_fr: '' },</div>
+    <p>Pour une erreur : remplace <code>vocab</code> par <code>errore</code>. Les champs <code>note_it</code> et <code>note_fr</code> peuvent être vides (<code>''</code>).</p></div>
+    <div class="tuto-step"><div class="tuto-num">4</div><p><strong>Sauvegarde</strong> (Ctrl+S), puis <strong>rafraîchis</strong> le navigateur (F5). Les nouvelles cartes apparaissent avec le statut "Nouvelle".</p></div>
+    <div class="tuto-tip">💡 À chaque session avec Claude, un bloc prêt-à-coller te sera fourni. Ctrl+F → repère → coller → sauvegarder → F5.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE LISTE ═══════════════ -->
+<div class="page" id="page-list">
+  <div class="page-header">
+    <h1>Toutes les cartes</h1>
+    <p id="list-count">51 cartes</p>
+  </div>
+  <div class="list-controls">
+    <input class="search-input" type="text" id="search" placeholder="Rechercher..." oninput="renderList()">
+    <select id="list-filter" onchange="renderList()" style="width:auto;flex:0 0 auto;margin:0">
+      <option value="all">Toutes</option>
+      <option value="errore">Erreurs</option>
+      <option value="vocab">Vocabulaire</option>
+      <option value="new">Nouvelles</option>
+      <option value="learning">En cours</option>
+      <option value="review">À réviser</option>
+      <option value="mastered">Maîtrisées</option>
+    </select>
+  </div>
+  <div id="list-container"></div>
+</div>
+
+<!-- ═══════════════ PAGE STATS ═══════════════ -->
+<div class="page" id="page-stats">
+  <div class="page-header">
+    <h1>Mes progrès</h1>
+    <p id="stats-date">—</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="big-n" id="st-total">0</div><div class="stat-l">Cartes total</div></div>
+    <div class="stat-card"><div class="big-n" id="st-mastered">0</div><div class="stat-l">Maîtrisées</div></div>
+    <div class="stat-card"><div class="big-n" id="st-streak">0</div><div class="stat-l">Série en cours</div></div>
+    <div class="stat-card"><div class="big-n" id="st-reviews">0</div><div class="stat-l">Révisions totales</div></div>
+  </div>
+  <div class="bar-chart">
+    <h3>Répartition par statut</h3>
+    <div class="bar-row"><span class="bar-lbl">Nouvelles</span><div class="bar-track"><div class="bar-fill" id="bar-new" style="background:var(--faint)"></div></div><span class="bar-val" id="bv-new">0</span></div>
+    <div class="bar-row"><span class="bar-lbl">En cours</span><div class="bar-track"><div class="bar-fill" id="bar-learning" style="background:var(--orange)"></div></div><span class="bar-val" id="bv-learning">0</span></div>
+    <div class="bar-row"><span class="bar-lbl">À réviser</span><div class="bar-track"><div class="bar-fill" id="bar-review" style="background:var(--accent)"></div></div><span class="bar-val" id="bv-review">0</span></div>
+    <div class="bar-row"><span class="bar-lbl">Maîtrisées</span><div class="bar-track"><div class="bar-fill" id="bar-mastered" style="background:var(--green)"></div></div><span class="bar-val" id="bv-mastered">0</span></div>
+  </div>
+  <button class="reset-btn" onclick="confirmReset()">🗑 Réinitialiser toute la progression</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DONNÉES — toutes les cartes
+// ═══════════════════════════════════════════
+const ALL_CARDS = [
+  // ─── SESSIONE 1 — Errori ricorrenti ───
+  {id:'e01',type:'errore',it:'perché',fr:'parce que / pourquoi',note_it:'Accento obbligatorio — mai "perche"',note_fr:''},
+  {id:'e02',type:'errore',it:'la differenza',fr:'la différence',note_it:'Non "differenzia" — falso amico',note_fr:'"differenzia" n\'existe pas en italien'},
+  {id:'e03',type:'errore',it:'aiutare a + infinito',fr:'aider à + infinitif',note_it:'Sempre "a", mai "di" — es. aiuta a capire',note_fr:'Jamais "aiutare di"'},
+  {id:'e04',type:'errore',it:'è necessario + infinito',fr:'il est nécessaire de + infinitif',note_it:'Senza preposizione — mai "è necessario d\'..."',note_fr:'Pas de préposition en italien avant l\'infinitif'},
+  {id:'e05',type:'errore',it:'il mercato del lavoro',fr:'le marché du travail',note_it:'Locuzione fissa — mai "mercato di lavoro"',note_fr:'Expression figée'},
+  {id:'e06',type:'errore',it:'cercare di + infinito',fr:'chercher à + infinitif',note_it:'In italiano: "di", non "a" — falso amico sintattico',note_fr:'Faux ami syntaxique très fréquent'},
+  {id:'e07',type:'errore',it:'pubblico / pubblici',fr:'public / publics',note_it:'Doppia "b" — mai "publico"',note_fr:'Double "b" en italien'},
+  {id:'e08',type:'errore',it:'soprattutto',fr:'surtout',note_it:'Doppia "t" — mai "soppratuto"',note_fr:''},
+  {id:'e09',type:'errore',it:'solamente / soltanto',fr:'seulement',note_it:'Mai "solatamente"',note_fr:''},
+  {id:'e10',type:'errore',it:'ridurre',fr:'réduire',note_it:'Mai "reduire" — infinito corretto: ridurre',note_fr:''},
+  {id:'e11',type:'errore',it:'il documento (masch.)',fr:'le document (masc.)',note_it:'Articolo: "il documento" — mai "el documento" (spagnolo)',note_fr:'"El" est espagnol'},
+  {id:'e12',type:'errore',it:'altre ragioni',fr:'d\'autres raisons',note_it:'"Altro" = autre — "oltre" significa au-delà',note_fr:'"Oltre" ≠ "autre" : faux ami'},
+  {id:'e13',type:'errore',it:'sono d\'accordo',fr:'je suis d\'accord',note_it:'Apostrofo obbligatorio dopo "d"',note_fr:''},
+  {id:'e14',type:'errore',it:'la forza lavoro',fr:'la main-d\'œuvre',note_it:'Locuzione invariabile, senza articolo interno',note_fr:''},
+  {id:'e15',type:'errore',it:'allora',fr:'alors / donc',note_it:'Doppia "l" — mai "alora"',note_fr:''},
+  {id:'e16',type:'errore',it:'dobbiamo',fr:'nous devons',note_it:'Doppia "b" — mai "dobiamo"',note_fr:''},
+  // ─── SESSIONE 1 — Vocabolario demografico ───
+  {id:'v01',type:'vocab',it:'il tasso di fecondità',fr:'le taux de fécondité',note_it:'Indicatore demografico chiave',note_fr:''},
+  {id:'v02',type:'vocab',it:'la previdenza sociale',fr:'la protection sociale / la sécurité sociale',note_it:'Sistema pensionistico e assistenziale',note_fr:''},
+  {id:'v03',type:'vocab',it:'il saldo migratorio',fr:'le solde migratoire',note_it:'Differenza tra immigrazione ed emigrazione',note_fr:''},
+  {id:'v04',type:'vocab',it:'la dispersione scolastica',fr:'le décrochage scolaire',note_it:'Abbandono precoce del sistema scolastico',note_fr:''},
+  {id:'v05',type:'vocab',it:'il tirocinio',fr:'le stage professionnel',note_it:'Periodo di formazione pratica in azienda',note_fr:''},
+  {id:'v06',type:'vocab',it:'la coesione sociale',fr:'la cohésion sociale',note_it:'Termine chiave nei documenti UE',note_fr:''},
+  {id:'v07',type:'vocab',it:'la conciliazione vita-lavoro',fr:'la conciliation vie professionnelle / vie familiale',note_it:'Tema centrale del dossier demografico',note_fr:''},
+  {id:'v08',type:'vocab',it:'la Garanzia Giovani',fr:'la Garantie pour la Jeunesse',note_it:'Programma UE per i NEET — istituito nel 2013',note_fr:''},
+  {id:'v09',type:'vocab',it:'NEET → giovani che non studiano e non lavorano',fr:'NEET → ni en emploi, ni en études, ni en formation',note_it:'Anglicismo: va sempre tradotto o spiegato in nota',note_fr:'Toujours traduire les anglicismes'},
+  {id:'v10',type:'vocab',it:'la fuga dei cervelli',fr:'la fuite des cerveaux / le brain drain',note_it:'Traduzione obbligatoria di "brain drain"',note_fr:''},
+  {id:'v11',type:'vocab',it:'la Commissione europea',fr:'la Commission européenne',note_it:'Maiuscola per l\'istituzione, minuscola per l\'aggettivo',note_fr:''},
+  {id:'v12',type:'vocab',it:'gli Stati membri',fr:'les États membres',note_it:'Maiuscola a "Stati" nel contesto UE',note_fr:''},
+  {id:'v13',type:'vocab',it:'la parità di genere',fr:'l\'égalité de genre / la parité hommes-femmes',note_it:'Tema ricorrente nei dossier SAEG',note_fr:''},
+  {id:'v14',type:'vocab',it:'il sistema previdenziale',fr:'le système de retraite / de protection sociale',note_it:'Si riferisce al sistema nel suo complesso',note_fr:''},
+  {id:'v15',type:'vocab',it:'notevole ≠ notable',fr:'considérable / remarquable ≠ célèbre',note_it:'FALSO AMICO — "notevole" non significa "famoso"',note_fr:'Faux ami classique'},
+  // ─── SESSIONE 2 — Errori grammaticali ───
+  {id:'e17',type:'errore',it:'dipendente dall\'UE',fr:'dépendant de l\'UE',note_it:'Mai "dependente de l\'UE" — preposizione: dipendente DA + articolo',note_fr:''},
+  {id:'e18',type:'errore',it:'uscire dall\'UE',fr:'sortir de l\'UE',note_it:'Mai "salire di l\'UE" — verbo corretto: uscire',note_fr:''},
+  {id:'e19',type:'errore',it:'sebbene / benché / nonostante / malgrado + congiuntivo',fr:'bien que / quoique / malgré que + subjonctif',note_it:'Queste congiunzioni vogliono SEMPRE il congiuntivo',note_fr:'Règle absolue: subjonctif obligatoire'},
+  {id:'e20',type:'errore',it:'adottino (congiuntivo di adottare)',fr:'adoptent (subjonctif)',note_it:'Dopo "è fondamentale che": congiuntivo, non indicativo',note_fr:'Indicatif après "che" = erreur fréquente'},
+  {id:'e21',type:'errore',it:'garantiscano (congiuntivo plurale di garantire)',fr:'garantissent (subjonctif pluriel)',note_it:'Verbi in -isc-: garantisca (sing.) / garantiscano (plur.)',note_fr:'Verbes en -isc-: attention au pluriel'},
+  // ─── SESSIONE 3 — Vocabolario politico e energetico ───
+  {id:'v16',type:'vocab',it:'il Piano Nazionale di Ripresa e Resilienza (PNRR)',fr:'le Plan national pour la reprise et la résilience',note_it:'Strumento italiano per i fondi NextGenerationEU — 194 mld €',note_fr:''},
+  {id:'v17',type:'vocab',it:'a fondo perduto',fr:'à fonds perdus / non remboursable',note_it:'Parte dei fondi UE che non va restituita',note_fr:''},
+  {id:'v18',type:'vocab',it:'l\'attuazione',fr:'la mise en œuvre',note_it:'Termine chiave nei dossier UE — mai "implementazione"',note_fr:''},
+  {id:'v19',type:'vocab',it:'i vincoli strutturali',fr:'les contraintes structurelles',note_it:'Fattori che limitano le scelte politiche di un governo',note_fr:''},
+  {id:'v20',type:'vocab',it:'l\'instabilità finanziaria',fr:'l\'instabilité financière',note_it:'Non "insicurezza" nel contesto economico',note_fr:''},
+  {id:'v21',type:'vocab',it:'il Presidente del Consiglio',fr:'le/la Président(e) du Conseil (Premier ministre)',note_it:'Capo del governo — non confondere con il Presidente della Repubblica',note_fr:'Ne pas confondre avec le Président de la République'},
+  {id:'v22',type:'vocab',it:'il Presidente della Repubblica',fr:'le Président de la République italienne',note_it:'Ruolo di garanzia, eletto dal Parlamento — non dal popolo',note_fr:'Élu par le Parlement, pas au suffrage universel direct'},
+  {id:'v23',type:'vocab',it:'la fiducia parlamentare',fr:'la confiance parlementaire / le vote de confiance',note_it:'Il governo deve ottenerla da Camera e Senato',note_fr:''},
+  {id:'v24',type:'vocab',it:'la coalizione di governo',fr:'la coalition gouvernementale',note_it:'FdI + Lega + Forza Italia nel governo Meloni',note_fr:''},
+  {id:'v25',type:'vocab',it:'euroscettico / europeista',fr:'eurosceptique / européiste',note_it:'Coppia di opposti fondamentale nel dibattito politico UE',note_fr:''},
+  {id:'v26',type:'vocab',it:'il carbon leakage → la fuga di carbonio',fr:'la fuite de carbone',note_it:'Anglicismo da tradurre — delocalizzazione verso paesi meno regolamentati',note_fr:'Toujours traduire ou expliquer en note'},
+  {id:'v27',type:'vocab',it:'la transizione energetica',fr:'la transition énergétique',note_it:'Tema centrale del Green Deal europeo',note_fr:''},
+  {id:'v28',type:'vocab',it:'la neutralità climatica',fr:'la neutralité climatique',note_it:'Obiettivo UE entro il 2050 — emissioni nette zero',note_fr:''},
+  {id:'v29',type:'vocab',it:'il tessuto produttivo',fr:'le tissu industriel / productif',note_it:'Termine elegante per il complesso delle imprese di un paese',note_fr:''},
+  // ─── FIN DES CARTES — ajouter ici ───
+];
+
+// ═══════════════════════════════════════════
+// SYSTÈME DE RÉPÉTITION ESPACÉE (SM-2 simplifié)
+// ═══════════════════════════════════════════
+// Intervalles Anki-style: 1j → 3j → 7j → 14j → 30j → 90j (maîtrisé)
+const INTERVALS = [1,3,7,14,30,90];
+const STORAGE_KEY = 'saeg_flashcards_v2';
+
+function today(){ return new Date().toISOString().slice(0,10); }
+
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY))||{}; }
+  catch(e){ return {}; }
+}
+function saveProgress(p){ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+
+function getCard(id){
+  const p = loadProgress();
+  if(!p[id]) p[id] = {level:0, nextReview:today(), reviews:0, correct:0};
+  return p[id];
+}
+
+function updateCard(id, correct){
+  const p = loadProgress();
+  if(!p[id]) p[id] = {level:0, nextReview:today(), reviews:0, correct:0};
+  const c = p[id];
+  c.reviews++;
+  if(correct){
+    c.correct++;
+    c.level = Math.min(c.level+1, INTERVALS.length-1);
+  } else {
+    c.level = Math.max(0, c.level-1);
+  }
+  const days = INTERVALS[c.level];
+  const d = new Date(); d.setDate(d.getDate()+days);
+  c.nextReview = d.toISOString().slice(0,10);
+  p[id] = c;
+  saveProgress(p);
+}
+
+function getStatus(id){
+  const c = getCard(id);
+  if(c.reviews===0) return 'new';
+  if(c.level===0) return 'learning';
+  if(c.level>=INTERVALS.length-1) return 'mastered';
+  return 'review';
+}
+
+function isDue(id){
+  const c = getCard(id);
+  return c.nextReview <= today();
+}
+
+function getIntervalLabel(id){
+  const c = getCard(id);
+  if(c.reviews===0) return 'Nouvelle';
+  const days = INTERVALS[c.level];
+  if(days===1) return 'Prochain rappel: demain';
+  if(days>=90) return '✓ Maîtrisée';
+  return `Prochain rappel: dans ${days}j`;
+}
+
+// ═══════════════════════════════════════════
+// ÉTAT ÉTUDE
+// ═══════════════════════════════════════════
+let deck=[], idx=0, flipped=false, dir='it-fr', tab='due';
+let sessionOk=0, sessionKo=0;
+
+function buildDeck(){
+  let cards = [...ALL_CARDS];
+  if(tab==='due') cards = cards.filter(c=>isDue(c.id));
+  else if(tab==='errore') cards = cards.filter(c=>c.type==='errore');
+  else if(tab==='vocab') cards = cards.filter(c=>c.type==='vocab');
+  // Trier: d'abord les cartes ratées (level=0, reviews>0), puis nouvelles, puis review
+  cards.sort((a,b)=>{
+    const sa=getStatus(a.id), sb=getStatus(b.id);
+    const order={learning:0,new:1,review:2,mastered:3};
+    return (order[sa]||0)-(order[sb]||0);
+  });
+  deck = cards;
+}
+
+function setTab(t, el){
+  tab=t;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  resetSession();
+}
+function setDir(v){ dir=v; showCard(); }
+function getDir(){ return dir==='random'?(Math.random()<.5?'it-fr':'fr-it'):dir; }
+
+function resetSession(){
+  buildDeck(); idx=0; flipped=false; sessionOk=0; sessionKo=0;
+  updateSessionScores(); showCard();
+}
+
+function shuffleDeck(){
+  for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]; }
+  idx=0; flipped=false; showCard();
+}
+
+function updateSessionScores(){
+  document.getElementById('sc-due').textContent = ALL_CARDS.filter(c=>isDue(c.id)).length;
+  document.getElementById('sc-new').textContent = ALL_CARDS.filter(c=>getStatus(c.id)==='new').length;
+  document.getElementById('sc-ok').textContent = sessionOk;
+  document.getElementById('sc-ko').textContent = sessionKo;
+}
+
+function showCard(){
+  if(deck.length===0){
+    // Empty state
+    document.getElementById('f-badge').textContent='';
+    document.getElementById('f-interval').textContent='';
+    document.getElementById('f-lang').textContent='';
+    document.getElementById('f-word').textContent = tab==='due' ? '🎉 Tout révisé !' : 'Aucune carte';
+    document.getElementById('f-note').textContent = tab==='due' ? 'Reviens demain pour les prochaines révisions.' : '';
+    document.getElementById('b-word').textContent='';
+    document.getElementById('b-note').textContent='';
+    document.getElementById('prog-txt').textContent='0 / 0';
+    document.getElementById('prog-pct').textContent='0%';
+    document.getElementById('prog-fill').style.width='0%';
+    return;
+  }
+  flipped=false;
+  document.getElementById('main-card').classList.remove('flipped');
+  document.getElementById('ans-row').classList.remove('vis');
+  document.getElementById('flip-hint').textContent='Cliquer pour voir la réponse · recliquer pour revenir';
+
+  const c = deck[idx];
+  const cd = getDir();
+  const badge = document.getElementById('f-badge');
+  badge.textContent = c.type==='errore'?'Errore ricorrente':'Vocabolario';
+  badge.className = 'card-badge '+(c.type==='errore'?'be':'bv');
+  document.getElementById('f-interval').textContent = getIntervalLabel(c.id);
+
+  if(cd==='it-fr'){
+    document.getElementById('f-lang').textContent='Italiano';
+    document.getElementById('f-word').textContent=c.it;
+    document.getElementById('f-note').textContent=c.note_it||'';
+    document.getElementById('b-lang').textContent='Français';
+    document.getElementById('b-word').textContent=c.fr;
+    document.getElementById('b-note').textContent=c.note_fr||'';
+  } else {
+    document.getElementById('f-lang').textContent='Français';
+    document.getElementById('f-word').textContent=c.fr;
+    document.getElementById('f-note').textContent=c.note_fr||'';
+    document.getElementById('b-lang').textContent='Italiano';
+    document.getElementById('b-word').textContent=c.it;
+    document.getElementById('b-note').textContent=c.note_it||'';
+  }
+  updateProg();
+  updateSessionScores();
+}
+
+function updateProg(){
+  const total=deck.length, seen=Math.min(idx+1,total);
+  document.getElementById('prog-txt').textContent=seen+' / '+total;
+  const pct=Math.round((seen/total)*100);
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('prog-fill').style.width=pct+'%';
+}
+
+function handleClick(){
+  if(!flipped){
+    flipped=true;
+    document.getElementById('main-card').classList.add('flipped');
+    document.getElementById('ans-row').classList.add('vis');
+    document.getElementById('flip-hint').textContent='Recliquer pour revenir à la question';
+  } else {
+    flipped=false;
+    document.getElementById('main-card').classList.remove('flipped');
+    document.getElementById('ans-row').classList.remove('vis');
+    document.getElementById('flip-hint').textContent='Cliquer pour voir la réponse · recliquer pour revenir';
+  }
+}
+
+function answer(correct){
+  if(deck.length===0) return;
+  const c = deck[idx];
+  updateCard(c.id, correct);
+  if(correct) sessionOk++; else sessionKo++;
+  nextCard();
+}
+
+function nextCard(){
+  if(deck.length===0) return;
+  idx = (idx+1) % deck.length;
+  showCard();
+}
+
+// ═══════════════════════════════════════════
+// PAGE LISTE
+// ═══════════════════════════════════════════
+function renderList(){
+  const q = document.getElementById('search').value.toLowerCase();
+  const f = document.getElementById('list-filter').value;
+  let cards = ALL_CARDS.filter(c=>{
+    const matchType = f==='all'||c.type===f||f===getStatus(c.id);
+    const matchQ = !q || c.it.toLowerCase().includes(q)||c.fr.toLowerCase().includes(q)||(c.note_it||'').toLowerCase().includes(q);
+    return matchType && matchQ;
+  });
+  document.getElementById('list-count').textContent = cards.length+' carte'+(cards.length>1?'s':'');
+  const statusLabel = {new:'Nouvelle',learning:'En cours',review:'À réviser',mastered:'Maîtrisée'};
+  const statusClass = {new:'s-new',learning:'s-learning',review:'s-review',mastered:'s-mastered'};
+  const rows = cards.map(c=>{
+    const st = getStatus(c.id);
+    const prog = getCard(c.id);
+    return `<tr>
+      <td class="col-it">${c.it}</td>
+      <td class="col-fr">${c.fr}</td>
+      <td><span class="badge-s ${statusClass[st]}">${statusLabel[st]}</span></td>
+      <td style="font-size:.72rem;color:var(--faint)">${prog.correct}/${prog.reviews}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('list-container').innerHTML = `<table>
+    <thead><tr><th>Italien</th><th>Français</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="4" style="text-align:center;color:var(--faint);padding:2rem">Aucune carte</td></tr>'}</tbody>
+  </table>`;
+}
+
+// ═══════════════════════════════════════════
+// PAGE STATS
+// ═══════════════════════════════════════════
+function renderStats(){
+  const total = ALL_CARDS.length;
+  const counts = {new:0,learning:0,review:0,mastered:0};
+  let totalReviews=0, totalCorrect=0;
+  ALL_CARDS.forEach(c=>{
+    counts[getStatus(c.id)]++;
+    const p=getCard(c.id);
+    totalReviews+=p.reviews; totalCorrect+=p.correct;
+  });
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-mastered').textContent=counts.mastered;
+  document.getElementById('st-reviews').textContent=totalReviews;
+  // Série: nb de jours consécutifs avec au moins 1 révision (approx via localStorage)
+  const streak = loadProgress()._streak||0;
+  document.getElementById('st-streak').textContent=streak;
+  document.getElementById('stats-date').textContent='Mis à jour le '+new Date().toLocaleDateString('fr-FR');
+  // Barres
+  ['new','learning','review','mastered'].forEach(s=>{
+    const pct = total>0?Math.round((counts[s]/total)*100):0;
+    document.getElementById('bar-'+s).style.width=pct+'%';
+    document.getElementById('bv-'+s).textContent=counts[s];
+  });
+}
+
+function confirmReset(){
+  if(confirm('Réinitialiser toute la progression ? Cette action est irréversible.')){
+    localStorage.removeItem(STORAGE_KEY);
+    resetSession();
+    renderStats();
+    renderList();
+    alert('Progression réinitialisée.');
+  }
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.target.classList.add('active');
+  if(id==='list') renderList();
+  if(id==='stats') renderStats();
+}
+
+function toggleTuto(){
+  const b=document.getElementById('tuto-box'),a=document.getElementById('t-arrow');
+  b.classList.toggle('open'); a.textContent=b.classList.contains('open')?'▲':'▼';
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+buildDeck(); showCard(); updateSessionScores();
+</script>
+</body>
+</html>
